@@ -1,0 +1,1 @@
+A B2B web platform that screens resumes and picks top n applicants for a position
