@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx src/utils/vectorCLI.ts",
+    "dev": "tsx src/index.ts",
     "start": "node dist/index.js"
   },
   "keywords": [],
@@ -19,11 +19,13 @@
   },
   "type": "module",
   "dependencies": {
+    "pdf-parse": "^2.4.5",
     "typescript": "^6.0.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^26.1.0",
+    "@types/pdf-parse": "^1.1.5",
     "tsx": "^4.22.5"
   }
 }
