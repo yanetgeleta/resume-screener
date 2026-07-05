@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import { parsePDf } from "./ingestion/pdfParser.js";
 import { chunkText } from "./ingestion/chunker.js";
 import { embedText } from "./embeddings/embedder.js";
-import { addToStore, initStore, saveStore } from "./vectorStore/store.js";
+import { addToStore, initStore } from "./vectorStore/store.js";
 
 const folderPath = process.argv[2];
 if (!folderPath) {
@@ -30,25 +30,27 @@ if (!input.success) {
 async function main() {
   const files: string[] = await getFilesPath(absoluteFolderPath);
   let id: number = 0;
-  const index = initStore(10000);
+  const index = await initStore();
   for (const file of files) {
+    // read the file and chunk the text
     const buffer = await fs.readFile(file);
     const text = await parsePDf(buffer);
     const chunks = chunkText(text, 200, 20);
-    // console.log(chunks);
-    const chunkMap: Record<
-      number,
-      { filename: string; chunkIndex: number; text: string }
-    > = {};
+
+    // embed the chunks separetely and add them to vectra to store as vectors
     for (const [chunkIndex, chunk] of chunks.entries()) {
       const vector = await embedText(chunk);
-      addToStore(index, vector, id++);
-      chunkMap[id] = { filename: path.basename(file), chunkIndex, text: chunk };
+      addToStore(index, vector, {
+        filename: path.basename(file),
+        chunkIndex: chunkIndex,
+        text: chunk,
+      });
+      console.log(
+        `[${path.basename(file)}] Chunk ${chunkIndex + 1} embedded and stored`,
+      );
       id++;
     }
-    await fs.writeFile("data/chunkMap.json", JSON.stringify(chunkMap, null, 2));
-    saveStore(index, "data/index.hnsw");
+    // await fs.writeFile("data/chunkMap.json", JSON.stringify(chunkMap, null, 2));
   }
-  console.log(absoluteFolderPath);
 }
 main().catch(console.error);

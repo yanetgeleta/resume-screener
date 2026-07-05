@@ -3,7 +3,7 @@ import path from "node:path";
 
 const INDEX_PATH = path.resolve("data/index");
 
-export async function initStore(maxElements: number): Promise<LocalIndex> {
+export async function initStore(): Promise<LocalIndex> {
   const index = new LocalIndex(INDEX_PATH);
   if (!(await index.isIndexCreated())) {
     await index.createIndex();
