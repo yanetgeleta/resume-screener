@@ -1,4 +1,4 @@
-import { pipeline } from "@xenova/transformers";
+import { pipeline } from "@huggingface/transformers";
 
 export async function embedText(text: string): Promise<number[]> {
   const extractor = await pipeline(

@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    container_name: resume-screener
+    env_file:
+      - ./back-end/.env
+    volumes:
+      # Mounts the resumes folder from inside the backend directory
+      - ./back-end/resumes:/app/resumes
+      # Keeps the data folder at the project root for persistence
+      - ./data:/app/data
