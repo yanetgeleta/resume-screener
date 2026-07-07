@@ -11,3 +11,15 @@ services:
       - ./back-end/resumes:/app/resumes
       # Keeps the data folder at the project root for persistence
       - ./data:/app/data
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: resume_screener_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+volumes:
+  redis_data:

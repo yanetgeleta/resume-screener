@@ -1,5 +1,6 @@
 allowBuilds:
   esbuild: true
   hnswlib-node: true
+  onnxruntime-node: true
   protobufjs: true
   sharp: true
