@@ -1,7 +1,9 @@
 import { LocalIndex } from "vectra";
-import path from "node:path";
+import path, { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const INDEX_PATH = path.resolve("data/index");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const INDEX_PATH = join(__dirname, "../../data/index");
 
 export async function initStore(): Promise<LocalIndex> {
   const index = new LocalIndex(INDEX_PATH);
@@ -9,6 +11,18 @@ export async function initStore(): Promise<LocalIndex> {
     await index.createIndex();
   }
   return index;
+}
+export async function chunkExists(
+  index: LocalIndex,
+  filename: string,
+  chunkIndex: number,
+): Promise<boolean> {
+  const items = await index.listItems();
+  return items.some(
+    (item) =>
+      item.metadata.filename === filename &&
+      item.metadata.chunkIndex === chunkIndex,
+  );
 }
 export async function addToStore(
   index: LocalIndex,

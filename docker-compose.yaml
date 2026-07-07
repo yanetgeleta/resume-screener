@@ -7,9 +7,7 @@ services:
     env_file:
       - ./back-end/.env
     volumes:
-      # Mounts the resumes folder from inside the backend directory
       - ./back-end/resumes:/app/resumes
-      # Keeps the data folder at the project root for persistence
       - ./data:/app/data
     depends_on:
       - redis
@@ -21,5 +19,6 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+
 volumes:
   redis_data:
