@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "search": "tsx src/search.ts"
+    "query": "tsx src/search.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +14,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "^11.9.0",
+      "version": "^11.10.0",
       "onFail": "download"
     }
   },

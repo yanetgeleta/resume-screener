@@ -56,5 +56,12 @@ async function main() {
       }
     }
   }
+  console.log(
+    "✅ Ingestion sequence completed successfully. Terminating process.",
+  );
+  process.exit(0);
 }
-main().catch(console.error);
+main().catch((error) => {
+  console.error("❌ Fatal error during execution sequence:", error);
+  process.exit(1);
+});

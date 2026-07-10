@@ -48,8 +48,7 @@ export async function searchStore(
     chunkIndex: number;
     text: string;
     score: number;
-    skillScore?: number;
-    experienceScoreValue?: number;
+    finalScore?: number;
   }[]
 > {
   const results = await index.queryItems(queryVector, queryText, k);
@@ -74,17 +73,15 @@ function matchSkills(text: string) {
   }
   return matchedSkills;
 }
-
-// returns the array with skillScore embedded
-export function skillsScore(
+export function finalScore(
   jd: string,
+  experienceReq: number,
   topResults: {
     filename: string;
     chunkIndex: number;
     text: string;
     score: number;
-    skillScore?: number;
-    experienceScore?: number;
+    finalScore?: number;
   }[],
 ) {
   const normalizedJd = jd
@@ -92,9 +89,10 @@ export function skillsScore(
     .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  const jdSet = new Set(normalizedJd.split(" "));
+  // const jdSet = new Set(normalizedJd.split(" "));
   const jdMatchedSkills = matchSkills(normalizedJd);
   for (const result of topResults) {
+    // calculates and adds skills score to the array
     const normalizedResult = result.text
       .toLowerCase()
       .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, " ")
@@ -102,36 +100,21 @@ export function skillsScore(
       .trim();
     const resultSkillsMatch = matchSkills(normalizedResult);
     const skillsScoreValue = resultSkillsMatch.size / jdMatchedSkills.size;
-    result.skillScore = skillsScoreValue;
-  }
-  return topResults;
-}
 
-export function experienceScore(
-  experienceReq: number,
-  topResults: {
-    filename: string;
-    chunkIndex: number;
-    text: string;
-    score: number;
-    skillScore?: number;
-    experienceScore?: number;
-  }[],
-) {
-  for (const result of topResults) {
-    if (experienceReq === 0) {
-      result.experienceScore = 1;
-      break;
-    }
+    // calculates and adds experience score to the array
+    let experienceScore = 0;
+
     const extractedExperience = extractYearsFromChunk(result.text);
-    if (extractedExperience >= experienceReq) {
-      result.experienceScore = 1;
-      break;
+    if (experienceReq === 0 || extractedExperience >= experienceReq) {
+      experienceScore = 1;
+    } else {
+      experienceScore =
+        1 - Math.abs(extractedExperience - experienceReq) / experienceReq;
     }
-    const score =
+    experienceScore =
       1 - Math.abs(extractedExperience - experienceReq) / experienceReq;
-    result.experienceScore = score;
+    result.finalScore =
+      result.score * 0.5 + skillsScoreValue * 0.35 + experienceScore * 0.15;
   }
   return topResults;
 }
-export function finalScore() {}
