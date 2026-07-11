@@ -73,16 +73,20 @@ function matchSkills(text: string) {
   }
   return matchedSkills;
 }
-export function finalScore(
-  jd: string,
-  experienceReq: number,
-  topResults: {
+interface GroupedFileResult {
+  fullText: string;
+  chunks: {
     filename: string;
     chunkIndex: number;
     text: string;
     score: number;
     finalScore?: number;
-  }[],
+  }[];
+}
+export function finalScore(
+  jd: string,
+  experienceReq: number,
+  finalGrouped: GroupedFileResult,
 ) {
   const normalizedJd = jd
     .toLowerCase()
@@ -91,30 +95,35 @@ export function finalScore(
     .trim();
   // const jdSet = new Set(normalizedJd.split(" "));
   const jdMatchedSkills = matchSkills(normalizedJd);
-  for (const result of topResults) {
-    // calculates and adds skills score to the array
-    const normalizedResult = result.text
+  for (const [filename, fileGroup] of Object.entries(finalGrouped)) {
+    // Use fileGroup.fullText instead of chunk text!
+    const normalizedResult = fileGroup.fullText
       .toLowerCase()
       .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, " ")
       .replace(/\s+/g, " ")
       .trim();
+
     const resultSkillsMatch = matchSkills(normalizedResult);
-    const skillsScoreValue = resultSkillsMatch.size / jdMatchedSkills.size;
+    let skillsScoreValue =
+      jdMatchedSkills.size > 0
+        ? resultSkillsMatch.size / jdMatchedSkills.size
+        : 1;
 
-    // calculates and adds experience score to the array
-    let experienceScore = 0;
+    const extractedExperience = extractYearsFromChunk(fileGroup.fullText);
+    const experienceScore =
+      experienceReq === 0
+        ? 1
+        : extractedExperience >= experienceReq
+          ? 1
+          : 1 - (experienceReq - extractedExperience) / experienceReq;
 
-    const extractedExperience = extractYearsFromChunk(result.text);
-    if (experienceReq === 0 || extractedExperience >= experienceReq) {
-      experienceScore = 1;
-    } else {
-      experienceScore =
-        1 - Math.abs(extractedExperience - experienceReq) / experienceReq;
-    }
-    experienceScore =
-      1 - Math.abs(extractedExperience - experienceReq) / experienceReq;
-    result.finalScore =
-      result.score * 0.5 + skillsScoreValue * 0.35 + experienceScore * 0.15;
+    // Calculate base score from the highest-scoring chunk in this file
+    const maxChunkScore = Math.max(...fileGroup.chunks.map((c) => c.score));
+
+    // Store the final score at the file level
+    fileGroup.finalScore =
+      maxChunkScore * 0.5 + skillsScoreValue * 0.35 + experienceScore * 0.15;
   }
-  return topResults;
+
+  return finalGrouped;
 }

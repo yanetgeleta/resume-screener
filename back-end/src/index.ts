@@ -5,6 +5,7 @@ import { parsePDf } from "./ingestion/pdfParser.js";
 import { chunkText } from "./ingestion/chunker.js";
 import { embedText } from "./embeddings/embedder.js";
 import { addToStore, chunkExists, initStore } from "./vectorStore/store.js";
+import { addCandidate } from "./models/candidates.js";
 
 const folderPath = process.argv[2];
 if (!folderPath) {
@@ -34,6 +35,8 @@ async function main() {
     // read the file and chunk the text
     const buffer = await fs.readFile(file);
     const text = await parsePDf(buffer);
+    // add text to candidates here. along with their metadata
+    const addCandidateResult = await addCandidate(path.basename(file), text);
     const chunks = chunkText(text, 200, 20);
 
     // embed the chunks separetely and add them to vectra to store as vectors
