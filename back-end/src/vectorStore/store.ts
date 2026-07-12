@@ -31,7 +31,12 @@ export async function chunkExists(
 export async function addToStore(
   index: LocalIndex,
   vector: number[],
-  metadata: { filename: string; chunkIndex: number; text: string },
+  metadata: {
+    filename: string;
+    contentHash_chunkIndex: any;
+    text: string;
+    company_name: string;
+  },
 ): Promise<void> {
   await index.insertItem({ vector, metadata });
 }

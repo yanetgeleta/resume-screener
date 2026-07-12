@@ -5,7 +5,8 @@ import { parsePDf } from "./ingestion/pdfParser.js";
 import { chunkText } from "./ingestion/chunker.js";
 import { embedText } from "./embeddings/embedder.js";
 import { addToStore, chunkExists, initStore } from "./vectorStore/store.js";
-import { addCandidate } from "./models/candidates.js";
+import { addResume } from "./models/candidates.js";
+import { createHash } from "crypto";
 
 const folderPath = process.argv[2];
 if (!folderPath) {
@@ -36,7 +37,8 @@ async function main() {
     const buffer = await fs.readFile(file);
     const text = await parsePDf(buffer);
     // add text to candidates here. along with their metadata
-    const addCandidateResult = await addCandidate(path.basename(file), text);
+    const contentHash = createHash("sha256").update(text).digest("hex");
+    const addResumeResult = await addResume(contentHash, text);
     const chunks = chunkText(text, 200, 20);
 
     // embed the chunks separetely and add them to vectra to store as vectors
@@ -44,10 +46,13 @@ async function main() {
       const vector = await embedText(chunk);
       const exists = await chunkExists(index, path.basename(file), chunkIndex);
       if (!exists) {
+        // Query the companies that have connection with this resume from applications
+        // one will be the company that uploadded it
         await addToStore(index, vector, {
           filename: path.basename(file),
-          chunkIndex: chunkIndex,
+          contentHash_chunkIndex: `${contentHash}_${chunkIndex}`,
           text: chunk,
+          company_name: "test",
         });
         console.log(
           `[${path.basename(file)}] Chunk ${chunkIndex + 1} embedded and stored`,

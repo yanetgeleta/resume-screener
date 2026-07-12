@@ -1,23 +1,23 @@
 import db from "../config/database.js";
 
 interface CandidateRow {
-  filename: string;
+  content_hash: string;
   full_text: string;
-  ingested_at: Date; // pg driver automatically parses timestamptz/timestamp to JavaScript Date
+  parsed_at: Date; // pg driver automatically parses timestamptz/timestamp to JavaScript Date
 }
-export const addCandidate = async (
-  filename: string,
+export const addResume = async (
+  contentHash: string,
   full_text: string,
 ): Promise<string | CandidateRow> => {
   const result = await db.query(
-    `insert into candidates (filename, full_text)
+    `insert into candidates (content_hash, full_text)
     values($1, $2)
-    on conflict (filename) do update set full_text = excluded.full_text
+    on conflict (content_hash) do update set content_hash = excluded.content_hash
     returning *`,
-    [filename, full_text],
+    [contentHash, full_text],
   );
   if (result.rows.length === 0) {
-    return "Failed to add candidate information to database";
+    return "Failed to add resume to the database";
   }
   return result.rows[0];
 };
