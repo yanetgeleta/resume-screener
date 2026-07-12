@@ -4,9 +4,13 @@ import fs from "fs/promises";
 import { parsePDf } from "./ingestion/pdfParser.js";
 import { chunkText } from "./ingestion/chunker.js";
 import { embedText } from "./embeddings/embedder.js";
-import { addToStore, chunkExists, initStore } from "./vectorStore/store.js";
-import { addResume } from "./models/candidates.js";
+import { addToStore, findChunk, initStore } from "./vectorStore/store.js";
+import { addResume } from "./models/resumes.js";
 import { createHash } from "crypto";
+import {
+  addApplication,
+  getCompaniesFromResume,
+} from "./models/applications.js";
 
 const folderPath = process.argv[2];
 if (!folderPath) {
@@ -39,27 +43,49 @@ async function main() {
     // add text to candidates here. along with their metadata
     const contentHash = createHash("sha256").update(text).digest("hex");
     const addResumeResult = await addResume(contentHash, text);
+    // we add the resume so we should also add it to the applications with the current company
+    // 1 is a placeholder for now since we only have 1 company
+    const addApplicationResult = await addApplication(
+      1,
+      contentHash,
+      path.basename(file),
+    );
+    const companiesAppliedTo = await getCompaniesFromResume(contentHash);
+    const companiesString = companiesAppliedTo.map((c) => c.name).join(", ");
     const chunks = chunkText(text, 200, 20);
 
     // embed the chunks separetely and add them to vectra to store as vectors
     for (const [chunkIndex, chunk] of chunks.entries()) {
-      const vector = await embedText(chunk);
-      const exists = await chunkExists(index, path.basename(file), chunkIndex);
-      if (!exists) {
+      const existingChunk = await findChunk(
+        index,
+        `${contentHash}_${chunkIndex}`,
+      );
+      if (existingChunk) {
         // Query the companies that have connection with this resume from applications
-        // one will be the company that uploadded it
+        // one will be the company that uploadded it (for now only Test Company is uploading it)
+        await index.upsertItem({
+          id: existingChunk.id,
+          vector: existingChunk.vector,
+          metadata: {
+            ...existingChunk.metadata,
+            company_names: companiesString,
+          },
+        });
+        console.log(
+          `[${path.basename(file)}] Chunk ${contentHash}_${chunkIndex + 1} embedded and stored`,
+        );
+      } else {
+        // Query companies that have connection to this resume in application and update company names with their names
+        // I don't want to add the vector again so if we can change the company_name with the new one it would nice
+        const vector = await embedText(chunk);
         await addToStore(index, vector, {
           filename: path.basename(file),
           contentHash_chunkIndex: `${contentHash}_${chunkIndex}`,
           text: chunk,
-          company_name: "test",
+          company_names: companiesString,
         });
         console.log(
-          `[${path.basename(file)}] Chunk ${chunkIndex + 1} embedded and stored`,
-        );
-      } else {
-        console.log(
-          `[${path.basename(file)}] Chunk ${chunkIndex + 1} already exists in store`,
+          `[${path.basename(file)}] Chunk ${contentHash}_${chunkIndex + 1} already exists in store`,
         );
       }
     }

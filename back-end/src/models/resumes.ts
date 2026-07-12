@@ -1,6 +1,6 @@
 import db from "../config/database.js";
 
-interface CandidateRow {
+interface ResumeRow {
   content_hash: string;
   full_text: string;
   parsed_at: Date; // pg driver automatically parses timestamptz/timestamp to JavaScript Date
@@ -8,7 +8,7 @@ interface CandidateRow {
 export const addResume = async (
   contentHash: string,
   full_text: string,
-): Promise<string | CandidateRow> => {
+): Promise<string | ResumeRow> => {
   const result = await db.query(
     `insert into candidates (content_hash, full_text)
     values($1, $2)
@@ -22,6 +22,7 @@ export const addResume = async (
   return result.rows[0];
 };
 
+// we are gonna change this
 export const getCandidate = async (filename: string): Promise<string> => {
   const result = await db.query(
     `select full_text from candidates where filename = $1`,

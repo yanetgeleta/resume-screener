@@ -16,16 +16,15 @@ export async function initStore(): Promise<LocalIndex> {
   }
   return index;
 }
-export async function chunkExists(
+export async function findChunk(
   index: LocalIndex,
-  filename: string,
-  chunkIndex: number,
-): Promise<boolean> {
+  contentHash_chunkIndex: string,
+) {
   const items = await index.listItems();
-  return items.some(
-    (item) =>
-      item.metadata.filename === filename &&
-      item.metadata.chunkIndex === chunkIndex,
+  return (
+    items.find(
+      (item) => item.metadata.contentHash_chunkIndex === contentHash_chunkIndex,
+    ) ?? null
   );
 }
 export async function addToStore(
@@ -35,7 +34,7 @@ export async function addToStore(
     filename: string;
     contentHash_chunkIndex: any;
     text: string;
-    company_name: string;
+    company_names: string;
   },
 ): Promise<void> {
   await index.insertItem({ vector, metadata });

@@ -1,9 +1,9 @@
 import fs from "fs/promises";
 import path from "node:path";
-import z from "zod";
+import z, { any } from "zod";
 import { embedText } from "./embeddings/embedder.js";
 import { finalScore, initStore, searchStore } from "./vectorStore/store.js";
-import { getCandidate } from "./models/candidates.js";
+import { getCandidate } from "./models/resumes.js";
 
 const jdPath = process.argv[2];
 const experienceReq: number = +process.argv[3];
@@ -60,6 +60,6 @@ async function main() {
   );
 
   const resultWithRerankScore = finalScore(jdText, experienceReq, finalGrouped);
-  console.log(resultWithRerankScore);
+  // console.log(resultWithRerankScore);
 }
 main().catch(console.error);
