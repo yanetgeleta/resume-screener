@@ -10,7 +10,7 @@ export const addResume = async (
   full_text: string,
 ): Promise<string | ResumeRow> => {
   const result = await db.query(
-    `insert into candidates (content_hash, full_text)
+    `insert into resumes (content_hash, full_text)
     values($1, $2)
     on conflict (content_hash) do update set content_hash = excluded.content_hash
     returning *`,
@@ -23,13 +23,13 @@ export const addResume = async (
 };
 
 // we are gonna change this
-export const getCandidate = async (filename: string): Promise<string> => {
+export const getResume = async (contentHash: string): Promise<string> => {
   const result = await db.query(
-    `select full_text from candidates where filename = $1`,
-    [filename],
+    `select full_text from resumes where content_hash = $1`,
+    [contentHash],
   );
   if (result.rows.length === 0) {
-    throw new Error(`Candidate info not found for file: ${filename}`);
+    throw new Error(`Resume not found for: ${contentHash}`);
   }
   return result.rows[0].full_text;
 };

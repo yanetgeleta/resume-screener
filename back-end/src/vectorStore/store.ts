@@ -34,7 +34,7 @@ export async function addToStore(
     filename: string;
     contentHash_chunkIndex: any;
     text: string;
-    company_names: string;
+    job_ids: string;
   },
 ): Promise<void> {
   await index.insertItem({ vector, metadata });
@@ -49,8 +49,9 @@ export async function searchStore(
 ): Promise<
   {
     filename: string;
-    chunkIndex: number;
+    contentHash_chunkIndex: any;
     text: string;
+    job_ids: string;
     score: number;
     finalScore?: number;
   }[]
@@ -59,8 +60,9 @@ export async function searchStore(
   return results.map((r) => ({
     ...(r.item.metadata as {
       filename: string;
-      chunkIndex: number;
+      contentHash_chunkIndex: any;
       text: string;
+      job_ids: string;
     }),
     score: r.score,
   }));
@@ -81,8 +83,9 @@ interface GroupedFileResult {
   fullText: string;
   chunks: {
     filename: string;
-    chunkIndex: number;
+    contentHash_chunkIndex: any;
     text: string;
+    job_ids: string;
     score: number;
     finalScore?: number;
   }[];

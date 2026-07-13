@@ -7,10 +7,7 @@ import { embedText } from "./embeddings/embedder.js";
 import { addToStore, findChunk, initStore } from "./vectorStore/store.js";
 import { addResume } from "./models/resumes.js";
 import { createHash } from "crypto";
-import {
-  addApplication,
-  getCompaniesFromResume,
-} from "./models/applications.js";
+import { addApplication, getJobsFromResume } from "./models/applications.js";
 
 const folderPath = process.argv[2];
 if (!folderPath) {
@@ -44,14 +41,14 @@ async function main() {
     const contentHash = createHash("sha256").update(text).digest("hex");
     const addResumeResult = await addResume(contentHash, text);
     // we add the resume so we should also add it to the applications with the current company
-    // 1 is a placeholder for now since we only have 1 company
+    // 1 is a placeholder for now since we only have 1 test job right now
     const addApplicationResult = await addApplication(
       1,
       contentHash,
       path.basename(file),
     );
-    const companiesAppliedTo = await getCompaniesFromResume(contentHash);
-    const companiesString = companiesAppliedTo.map((c) => c.name).join(", ");
+    const jobsAppliedTo = await getJobsFromResume(contentHash);
+    const jobIdsString = jobsAppliedTo.map((j) => j.id).join(", ");
     const chunks = chunkText(text, 200, 20);
 
     // embed the chunks separetely and add them to vectra to store as vectors
@@ -68,7 +65,7 @@ async function main() {
           vector: existingChunk.vector,
           metadata: {
             ...existingChunk.metadata,
-            company_names: companiesString,
+            job_ids: jobIdsString,
           },
         });
         console.log(
@@ -82,7 +79,7 @@ async function main() {
           filename: path.basename(file),
           contentHash_chunkIndex: `${contentHash}_${chunkIndex}`,
           text: chunk,
-          company_names: companiesString,
+          job_ids: jobIdsString,
         });
         console.log(
           `[${path.basename(file)}] Chunk ${contentHash}_${chunkIndex + 1} already exists in store`,
